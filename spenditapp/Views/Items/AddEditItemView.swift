@@ -103,6 +103,7 @@ struct AddEditItemView: View {
                                             .fill(icon == iconName ? typeColor.opacity(0.2) : Color.clear)
                                     )
                             }
+                            .buttonStyle(.plain)
                         }
                     }
                     .padding(.vertical, 8)

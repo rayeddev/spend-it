@@ -70,6 +70,18 @@ class CurrencyFormatter {
         return locale.currencySymbol ?? "$"
     }
 
+    /// Format decimal as plain number string without currency symbol
+    func plainString(from decimal: Decimal, currencyCode: String = "USD") -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 2
+        formatter.minimumFractionDigits = 2
+        formatter.groupingSeparator = ","
+        formatter.usesGroupingSeparator = true
+
+        return formatter.string(from: NSDecimalNumber(decimal: decimal)) ?? "0.00"
+    }
+
     // MARK: - Private Methods
 
     private func getFormatter(for currencyCode: String) -> NumberFormatter {

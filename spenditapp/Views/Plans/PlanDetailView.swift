@@ -26,31 +26,35 @@ struct PlanDetailView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Tab picker
-            Picker("Type", selection: $selectedTab) {
-                Text("Outcome").tag(ItemType.outcome)
-                Text("Income").tag(ItemType.income)
-                Text("Savings").tag(ItemType.savings)
-            }
-            .pickerStyle(.segmented)
-            .padding()
-
-            // Items list
-            ItemsListView(
-                items: plan.items(ofType: selectedTab),
-                plan: plan,
-                onEdit: { item in
-                    editingItem = item
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                // Tab picker
+                Picker("Type", selection: $selectedTab) {
+                    Text("Expenses").tag(ItemType.outcome)
+                    Text("Income").tag(ItemType.income)
+                    Text("Savings").tag(ItemType.savings)
                 }
-            )
+                .pickerStyle(.segmented)
+                .padding()
 
-            Spacer()
-
-            // Summary bar (always visible)
-            SummaryBarView(plan: plan) {
-                convertRemainingToSavings()
+                // Items list - takes all remaining space
+                ItemsListView(
+                    items: plan.items(ofType: selectedTab),
+                    plan: plan,
+                    onEdit: { item in
+                        editingItem = item
+                    }
+                )
             }
+
+            // Summary bar pinned at bottom
+            VStack {
+                Spacer()
+                SummaryBarView(plan: plan) {
+                    convertRemainingToSavings()
+                }
+            }
+            .ignoresSafeArea(.keyboard)
         }
         .navigationTitle(plan.name ?? "Plan")
         .navigationBarTitleDisplayMode(.inline)
@@ -161,6 +165,13 @@ struct ItemsListView: View {
                 .onMove { from, to in
                     moveItems(from: from, to: to)
                 }
+
+                // Bottom spacer to prevent content from being hidden by SummaryBar
+                Color.clear
+                    .frame(height: 200)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
@@ -277,9 +288,9 @@ struct PlanItemRowView: View {
             Spacer()
 
             // Amount
-            Text(item.formattedAmount(currencyCode: plan.currencyCode ?? "USD"))
+            Text(amountText)
                 .font(.system(.body, design: .rounded).weight(.semibold))
-                .foregroundStyle(item.isFrozen ? .secondary : .primary)
+                .foregroundStyle(amountColor)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
@@ -293,20 +304,32 @@ struct PlanItemRowView: View {
         )
         .opacity(item.isFrozen ? 0.7 : 1.0)
         .offset(x: offset)
+        .animation(nil, value: offset)  // Disable implicit animations for offset changes
         .gesture(
-            DragGesture()
+            DragGesture(minimumDistance: 20)
                 .onChanged { gesture in
-                    // Only allow right swipe
-                    if gesture.translation.width > 0 {
-                        offset = min(gesture.translation.width, 100)
+                    // Only respond to horizontal swipes (not vertical scrolling)
+                    let horizontalAmount = abs(gesture.translation.width)
+                    let verticalAmount = abs(gesture.translation.height)
+
+                    // If the gesture is more horizontal than vertical, handle it
+                    if horizontalAmount > verticalAmount {
+                        // Only allow right swipe - update immediately without animation
+                        if gesture.translation.width > 0 {
+                            offset = min(gesture.translation.width, 100)
+                        }
                     }
                 }
                 .onEnded { gesture in
-                    if gesture.translation.width > 50 {
+                    let horizontalAmount = abs(gesture.translation.width)
+                    let verticalAmount = abs(gesture.translation.height)
+
+                    // Only toggle freeze if it was a horizontal swipe
+                    if horizontalAmount > verticalAmount && gesture.translation.width > 50 {
                         // Swipe threshold reached - toggle freeze
                         toggleFrozen()
                     }
-                    // Reset offset with animation
+                    // Reset offset with explicit animation
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         offset = 0
                     }
@@ -327,6 +350,34 @@ struct PlanItemRowView: View {
         case .outcome: return .red
         case .savings: return .blue
         }
+    }
+
+    private var amountText: String {
+        // For outcome items, show plain number without currency symbol
+        if item.typeEnum == .outcome {
+            return CurrencyFormatter.shared.plainString(
+                from: item.amountDecimal ?? 0,
+                currencyCode: plan.currencyCode ?? "USD"
+            )
+        } else {
+            // For income and savings, keep currency symbol
+            return item.formattedAmount(currencyCode: plan.currencyCode ?? "USD")
+        }
+    }
+
+    private var amountColor: Color {
+        // Frozen items always show secondary color
+        if item.isFrozen {
+            return .secondary
+        }
+
+        // Outcome items show light gray (secondary) color
+        if item.typeEnum == .outcome {
+            return .secondary
+        }
+
+        // Other items show primary color
+        return .primary
     }
 
     private func toggleFrozen() {

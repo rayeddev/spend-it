@@ -233,7 +233,7 @@ struct PlanRowView: View {
                 )
 
                 SummaryMiniItem(
-                    label: "Outcome",
+                    label: "Expenses",
                     value: plan.totalOutcome,
                     color: .red,
                     currencyCode: plan.currencyCode ?? "USD"

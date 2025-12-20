@@ -17,7 +17,7 @@ enum ItemType: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .outcome: return "Outcome"
+        case .outcome: return "Expense"
         case .income: return "Income"
         case .savings: return "Savings"
         }
