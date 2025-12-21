@@ -38,15 +38,8 @@ struct PlanDetailView: View {
                 }
                 .padding(.top, 8)
 
-                // Tab picker with enhanced styling
-                Picker("Type", selection: $selectedTab) {
-                    Text("Expenses").tag(ItemType.outcome)
-                    Text("Income").tag(ItemType.income)
-                    Text("Savings").tag(ItemType.savings)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
+                // Custom tab picker with modern styling
+                CustomTabPicker(selection: $selectedTab)
 
                 // Items list - takes all remaining space
                 ItemsListView(

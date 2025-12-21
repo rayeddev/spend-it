@@ -7,10 +7,9 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		03E3BFD354794A659089E706 /* CustomTabPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabPicker.swift; sourceTree = "<group>"; };
 		1661268A2EF5D840007A3094 /* spenditapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = spenditapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-BC1B0B3BB8D542358F178A52 /* GradientStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientStyles.swift; sourceTree = "<group>"; };
-		2A7B535E26DF4975908A7E65 /* CardStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardStyles.swift; sourceTree = "<group>"; };
-		/* End PBXFileReference section */
+/* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		166126972EF5D841007A3094 /* Exceptions for "spenditapp" folder in "spenditapp" target */ = {
@@ -124,9 +123,7 @@ BC1B0B3BB8D542358F178A52 /* GradientStyles.swift */ = {isa = PBXFileReference; l
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			
-				823230519FA7470EB473C792 /* GradientStyles.swift in Sources */,
-				E43A01DBCCF8433E9D3B8A86 /* CardStyles.swift in Sources */,);
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
@@ -136,6 +133,7 @@ BC1B0B3BB8D542358F178A52 /* GradientStyles.swift */ = {isa = PBXFileReference; l
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				423C9C2E97334F08B7C0B369 /* CustomTabPicker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
