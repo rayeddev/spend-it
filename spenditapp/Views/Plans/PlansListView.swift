@@ -58,6 +58,7 @@ struct PlansListView: View {
                     plansList
                 }
             }
+            .adaptiveBackground()
             .navigationTitle("SpendIt")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -164,6 +165,8 @@ struct PlansListView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .listStyle(.plain)
         .navigationDestination(for: PlanEntity.self) { plan in
             PlanDetailView(plan: plan)
         }
@@ -197,17 +200,25 @@ struct PlanRowView: View {
     @ObservedObject var plan: PlanEntity
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(plan.name ?? "Unnamed Plan")
-                    .font(.headline)
+                    .font(.headline.weight(.semibold))
 
                 Spacer()
 
                 if plan.isRecurring {
-                    Image(systemName: "repeat")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Image(systemName: "repeat")
+                            .font(.caption)
+                        Text("Recurring")
+                            .font(.caption.weight(.medium))
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Color.blue.opacity(0.1))
+                    .foregroundStyle(.blue)
+                    .clipShape(Capsule())
                 }
             }
 
@@ -219,16 +230,17 @@ struct PlanRowView: View {
                 Spacer()
 
                 Text(remainingText)
-                    .font(.subheadline.bold())
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(plan.isBalanced ? .green : .red)
             }
 
-            // Mini summary
+            // Mini summary with gradients
             HStack(spacing: 16) {
                 SummaryMiniItem(
                     label: "Income",
                     value: plan.totalIncome,
                     color: .green,
+                    gradient: GradientStyles.incomeGradient,
                     currencyCode: plan.currencyCode ?? "USD"
                 )
 
@@ -236,6 +248,7 @@ struct PlanRowView: View {
                     label: "Expenses",
                     value: plan.totalOutcome,
                     color: .red,
+                    gradient: GradientStyles.expenseGradient,
                     currencyCode: plan.currencyCode ?? "USD"
                 )
 
@@ -243,12 +256,13 @@ struct PlanRowView: View {
                     label: "Savings",
                     value: plan.totalSavings,
                     color: .blue,
+                    gradient: GradientStyles.savingsGradient,
                     currencyCode: plan.currencyCode ?? "USD"
                 )
             }
             .font(.caption)
         }
-        .padding(.vertical, 4)
+        .planCard()
     }
 
     private var dateRangeText: String {
@@ -275,15 +289,17 @@ struct SummaryMiniItem: View {
     let label: String
     let value: Decimal
     let color: Color
+    let gradient: LinearGradient
     let currencyCode: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(label)
-                .foregroundStyle(.secondary)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
             Text(CurrencyFormatter.shared.abbreviatedString(from: value, currencyCode: currencyCode))
-                .foregroundStyle(color)
-                .fontWeight(.semibold)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(gradient)
         }
     }
 }

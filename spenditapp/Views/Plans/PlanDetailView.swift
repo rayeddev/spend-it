@@ -26,16 +26,27 @@ struct PlanDetailView: View {
     // MARK: - Body
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack(alignment: .bottomTrailing) {
+            // Gradient background
+            AdaptiveGradientView()
+                .ignoresSafeArea()
+
             VStack(spacing: 0) {
-                // Tab picker
+                // Summary card at top
+                SummaryBarView(plan: plan) {
+                    convertRemainingToSavings()
+                }
+                .padding(.top, 8)
+
+                // Tab picker with enhanced styling
                 Picker("Type", selection: $selectedTab) {
                     Text("Expenses").tag(ItemType.outcome)
                     Text("Income").tag(ItemType.income)
                     Text("Savings").tag(ItemType.savings)
                 }
                 .pickerStyle(.segmented)
-                .padding()
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
 
                 // Items list - takes all remaining space
                 ItemsListView(
@@ -47,14 +58,21 @@ struct PlanDetailView: View {
                 )
             }
 
-            // Summary bar pinned at bottom
-            VStack {
-                Spacer()
-                SummaryBarView(plan: plan) {
-                    convertRemainingToSavings()
-                }
+            // Floating Action Button at bottom right
+            Button {
+                showingAddItem = true
+                HapticManager.shared.lightImpact()
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 56, height: 56)
+                    .background(fabGradient)
+                    .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
             }
-            .ignoresSafeArea(.keyboard)
+            .padding(.trailing, 20)
+            .padding(.bottom, 20)
         }
         .navigationTitle(plan.name ?? "Plan")
         .navigationBarTitleDisplayMode(.inline)
@@ -93,6 +111,19 @@ struct PlanDetailView: View {
         }
         .sheet(isPresented: $showingClonePlan) {
             ClonePlanView(sourcePlan: plan)
+        }
+    }
+
+    // MARK: - Computed Properties
+
+    private var fabGradient: LinearGradient {
+        switch selectedTab {
+        case .income:
+            return GradientStyles.incomeGradient
+        case .outcome:
+            return GradientStyles.expenseGradient
+        case .savings:
+            return GradientStyles.savingsGradient
         }
     }
 
@@ -165,17 +196,10 @@ struct ItemsListView: View {
                 .onMove { from, to in
                     moveItems(from: from, to: to)
                 }
-
-                // Bottom spacer to prevent content from being hidden by SummaryBar
-                Color.clear
-                    .frame(height: 200)
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(Color(.systemGroupedBackground))
+            .background(Color.clear)
         }
     }
 
@@ -194,7 +218,7 @@ struct ItemsListView: View {
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .background(Color.clear)
     }
 
     private var itemIcon: String {
@@ -259,29 +283,57 @@ struct PlanItemRowView: View {
     @State private var offset: CGFloat = 0
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Icon
-            if let icon = item.icon {
-                Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundStyle(item.typeEnum.systemColor == "green" ? .green :
-                                   item.typeEnum.systemColor == "red" ? .red : .blue)
-                    .frame(width: 32)
+        HStack(spacing: 14) {
+            // Icon with gradient background
+            ZStack {
+                Circle()
+                    .fill(item.isFrozen ? frozenIconGradient : iconGradient)
+                    .frame(width: 44, height: 44)
+                    .overlay {
+                        if item.isFrozen {
+                            Circle()
+                                .strokeBorder(Color.cyan.opacity(0.3), lineWidth: 2)
+                        }
+                    }
+
+                if let icon = item.icon {
+                    Image(systemName: icon)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white)
+                }
+
+                // Frozen overlay icon
+                if item.isFrozen {
+                    Image(systemName: "snowflake")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.cyan)
+                        .background(
+                            Circle()
+                                .fill(.white)
+                                .frame(width: 16, height: 16)
+                        )
+                        .offset(x: 16, y: -16)
+                }
             }
 
             // Name
             VStack(alignment: .leading, spacing: 4) {
-                Text(item.name ?? "Unnamed")
-                    .font(.body)
+                HStack(spacing: 6) {
+                    Text(item.name ?? "Unnamed")
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(item.isFrozen ? .secondary : .primary)
+
+                    if item.isFrozen {
+                        Image(systemName: "pause.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.cyan.opacity(0.7))
+                    }
+                }
 
                 if item.isFrozen {
-                    HStack(spacing: 4) {
-                        Image(systemName: "snowflake")
-                            .font(.caption2)
-                        Text("Frozen")
-                            .font(.caption)
-                    }
-                    .foregroundStyle(.secondary)
+                    Text("Paused from calculations")
+                        .font(.caption2)
+                        .foregroundStyle(.cyan.opacity(0.8))
                 }
             }
 
@@ -292,17 +344,27 @@ struct PlanItemRowView: View {
                 .font(.system(.body, design: .rounded).weight(.semibold))
                 .foregroundStyle(amountColor)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(item.isFrozen ? Color(.systemGray6) : Color(.systemBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(item.isFrozen ? Color(.systemGray4) : Color.clear, lineWidth: 1)
-        )
-        .opacity(item.isFrozen ? 0.7 : 1.0)
+        .itemCard()
+        .overlay {
+            if item.isFrozen {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [Color.cyan.opacity(0.3), Color.blue.opacity(0.2)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.5
+                    )
+            }
+        }
+        .overlay {
+            if item.isFrozen {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.cyan.opacity(0.05))
+            }
+        }
+        .saturation(item.isFrozen ? 0.5 : 1.0)
         .offset(x: offset)
         .animation(nil, value: offset)  // Disable implicit animations for offset changes
         .gesture(
@@ -350,6 +412,22 @@ struct PlanItemRowView: View {
         case .outcome: return .red
         case .savings: return .blue
         }
+    }
+
+    private var iconGradient: LinearGradient {
+        switch item.typeEnum {
+        case .income: return GradientStyles.incomeGradient
+        case .outcome: return GradientStyles.expenseGradient
+        case .savings: return GradientStyles.savingsGradient
+        }
+    }
+
+    private var frozenIconGradient: LinearGradient {
+        LinearGradient(
+            colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.4)],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
     }
 
     private var amountText: String {

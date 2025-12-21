@@ -22,74 +22,83 @@ struct SummaryBarView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 12) {
-            // Summary row
-            HStack(spacing: 16) {
+        VStack(spacing: 14) {
+            // Summary row with improved spacing
+            HStack(spacing: 12) {
                 SummaryColumn(
                     label: "Income",
                     value: plan.totalIncome,
                     color: .green,
+                    gradient: GradientStyles.incomeGradient,
                     currencyCode: plan.currencyCode ?? "USD"
                 )
 
                 Divider()
+                    .frame(height: 50)
 
                 SummaryColumn(
                     label: "Expenses",
                     value: plan.totalOutcome,
                     color: .red,
+                    gradient: GradientStyles.expenseGradient,
                     currencyCode: plan.currencyCode ?? "USD"
                 )
 
                 Divider()
+                    .frame(height: 50)
 
                 SummaryColumn(
                     label: "Savings",
                     value: plan.totalSavings,
                     color: .blue,
+                    gradient: GradientStyles.savingsGradient,
                     currencyCode: plan.currencyCode ?? "USD"
                 )
             }
-            .frame(height: 60)
+            .frame(height: 70)
 
-            // Remaining amount
-            VStack(spacing: 4) {
+            // Remaining amount with enhanced styling
+            VStack(spacing: 6) {
                 Text("REMAINING")
-                    .font(.caption)
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
+                    .tracking(1.2)
 
                 Text(formattedRemaining)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(remainingColor)
-                    .animation(.easeInOut(duration: 0.3), value: plan.remainingAmount)
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .foregroundStyle(remainingGradient)
+                    .contentTransition(.numericText())
+                    .animation(.spring(response: 0.5, dampingFraction: 0.8), value: plan.remainingAmount)
                     .accessibilityLabel("Remaining amount: \(formattedRemaining)")
             }
+            .padding(.vertical, 4)
 
-            // Convert to Savings button
+            // Convert button with modern styling
             if plan.remainingAmount > 0 {
                 Button {
                     onConvertToSavings()
                 } label: {
-                    HStack {
+                    HStack(spacing: 8) {
                         Image(systemName: "arrow.down.circle.fill")
+                            .font(.body.weight(.semibold))
                         Text("Convert to Savings")
+                            .font(.subheadline.weight(.semibold))
                     }
-                    .font(.subheadline.bold())
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.blue)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .frame(height: 50)
+                    .background(GradientStyles.savingsGradient)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .shadow(color: Color.blue.opacity(0.3), radius: 8, y: 4)
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 10, y: -5)
-        )
+        .padding(20)
+        .glassMorphism(tint: .blue, intensity: 0.8)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 12)
+        .shadow(color: .black.opacity(0.12), radius: 24, y: 8)
     }
 
     // MARK: - Computed Properties
@@ -110,6 +119,20 @@ struct SummaryBarView: View {
             return .green
         }
     }
+
+    private var remainingGradient: LinearGradient {
+        if plan.remainingAmount < 0 {
+            return GradientStyles.expenseGradient
+        } else if plan.remainingAmount < (plan.totalIncome * 0.05) {
+            return LinearGradient(
+                colors: [Color.orange, Color.red],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        } else {
+            return GradientStyles.incomeGradient
+        }
+    }
 }
 
 // MARK: - Summary Column
@@ -119,18 +142,20 @@ struct SummaryColumn: View {
     let label: String
     let value: Decimal
     let color: Color
+    let gradient: LinearGradient
     let currencyCode: String
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             Text(label.uppercased())
-                .font(.caption2)
+                .font(.caption2.weight(.semibold))
                 .foregroundStyle(.secondary)
+                .tracking(1.0)
 
             Text(CurrencyFormatter.shared.abbreviatedString(from: value, currencyCode: currencyCode))
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                .foregroundStyle(color)
-                .minimumScaleFactor(0.8)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(gradient)
+                .minimumScaleFactor(0.7)
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)

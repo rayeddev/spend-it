@@ -126,6 +126,8 @@ struct SettingsView: View {
                     Text("About")
                 }
             }
+            .scrollContentBackground(.hidden)
+            .adaptiveBackground()
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

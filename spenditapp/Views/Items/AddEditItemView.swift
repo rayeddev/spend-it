@@ -130,6 +130,8 @@ struct AddEditItemView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .adaptiveBackground()
             .navigationTitle(editingItem == nil ? "Add \(itemType.displayName)" : "Edit \(itemType.displayName)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
