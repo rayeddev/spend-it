@@ -4,6 +4,14 @@
 
 A modern iOS app that helps you create proactive spending plans and track your financial goals with a beautiful, intuitive interface.
 
+## 🎬 Demo
+
+![SpendIt Demo](assets/demo.gif)
+
+*Create plans, add items, and see real-time calculations in action*
+
+> **Note**: To record your own demo GIF, see [RECORDING_GUIDE.md](RECORDING_GUIDE.md)
+
 ## ✨ Features
 
 ### Core Functionality
