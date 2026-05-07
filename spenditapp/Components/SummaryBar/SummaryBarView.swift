@@ -157,6 +157,8 @@ struct SummaryColumn: View {
                 .foregroundStyle(gradient)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
+                .contentTransition(.numericText())
+                .animation(.easeInOut(duration: 0.25), value: value)
         }
         .frame(maxWidth: .infinity)
     }
