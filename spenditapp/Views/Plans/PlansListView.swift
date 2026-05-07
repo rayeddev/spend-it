@@ -234,6 +234,8 @@ struct PlanRowView: View {
 
                 Spacer()
 
+                endingBadge
+
                 if plan.isRecurring {
                     HStack(spacing: 4) {
                         Image(systemName: "repeat")
@@ -290,6 +292,33 @@ struct PlanRowView: View {
             .font(.caption)
         }
         .planCard()
+    }
+
+    @ViewBuilder
+    private var endingBadge: some View {
+        if let days = daysUntilEnd, days >= 0, days <= 7, plan.statusEnum == .active {
+            let isUrgent = days <= 3
+            let color: Color = isUrgent ? .orange : .secondary
+            HStack(spacing: 4) {
+                Image(systemName: "clock")
+                    .font(.caption)
+                Text(days == 0 ? "Ends today" : (days == 1 ? "Ends in 1 day" : "Ends in \(days) days"))
+                    .font(.caption.weight(.medium))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(color.opacity(0.12))
+            .foregroundStyle(color)
+            .clipShape(Capsule())
+        }
+    }
+
+    private var daysUntilEnd: Int? {
+        guard let end = plan.endDate else { return nil }
+        let cal = Calendar.current
+        let startOfToday = cal.startOfDay(for: Date())
+        let startOfEnd = cal.startOfDay(for: end)
+        return cal.dateComponents([.day], from: startOfToday, to: startOfEnd).day
     }
 
     private var dateRangeText: String {
