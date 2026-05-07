@@ -27,6 +27,7 @@ struct PlansListView: View {
     @State private var showingNewPlanSheet = false
     @State private var showingSettings = false
     @State private var selectedPlan: PlanEntity?
+    @State private var pendingDeleteOffsets: IndexSet?
 
     // MARK: - Computed Properties
 
@@ -158,7 +159,8 @@ struct PlansListView: View {
                         }
                     }
                     .onDelete { indexSet in
-                        deleteHistoricalPlans(at: indexSet)
+                        HapticManager.shared.lightImpact()
+                        pendingDeleteOffsets = indexSet
                     }
                 } header: {
                     Text("HISTORY")
@@ -170,6 +172,31 @@ struct PlansListView: View {
         .navigationDestination(for: PlanEntity.self) { plan in
             PlanDetailView(plan: plan)
         }
+        .confirmationDialog(
+            confirmationTitle,
+            isPresented: Binding(
+                get: { pendingDeleteOffsets != nil },
+                set: { if !$0 { pendingDeleteOffsets = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let offsets = pendingDeleteOffsets {
+                    deleteHistoricalPlans(at: offsets)
+                }
+                pendingDeleteOffsets = nil
+            }
+            Button("Cancel", role: .cancel) {
+                pendingDeleteOffsets = nil
+            }
+        } message: {
+            Text("This can't be undone.")
+        }
+    }
+
+    private var confirmationTitle: String {
+        let count = pendingDeleteOffsets?.count ?? 0
+        return count > 1 ? "Delete \(count) plans?" : "Delete this plan?"
     }
 
     // MARK: - Actions
