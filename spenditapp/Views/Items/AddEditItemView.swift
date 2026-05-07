@@ -8,6 +8,7 @@
 import SwiftUI
 internal import CoreData
 
+
 // MARK: - Add/Edit Item View
 
 struct AddEditItemView: View {
@@ -194,6 +195,7 @@ struct AddEditItemView: View {
             existing.icon = icon.isEmpty ? nil : icon
             existing.notes = notes.isEmpty ? nil : notes
             existing.updatedAt = Date()
+            existing.updateGroupKey() // Update groupKey when name changes
         } else {
             // Create new
             let item = PlanItemEntity.create(
@@ -215,6 +217,13 @@ struct AddEditItemView: View {
 
         do {
             try viewContext.save()
+
+            // Sync to parent if this is a child plan
+            if PlanGroupEntity.isPartOfGroup(plan: plan, in: viewContext) {
+                let syncEngine = GroupSyncEngine(context: viewContext)
+                try? syncEngine.syncChildToParent(childPlan: plan)
+            }
+
             HapticManager.shared.success()
             dismiss()
         } catch {
@@ -232,6 +241,13 @@ struct AddEditItemView: View {
 
         do {
             try viewContext.save()
+
+            // Sync to parent if this is a child plan
+            if PlanGroupEntity.isPartOfGroup(plan: plan, in: viewContext) {
+                let syncEngine = GroupSyncEngine(context: viewContext)
+                try? syncEngine.syncChildToParent(childPlan: plan)
+            }
+
             dismiss()
         } catch {
             print("Error deleting item: \(error)")

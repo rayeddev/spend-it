@@ -80,7 +80,9 @@ class PersistenceController {
     // MARK: - Initialization
 
     init(inMemory: Bool = false) {
-        container = NSPersistentCloudKitContainer(name: "SpendItModel")
+        // Use programmatic model
+        let model = Self.createModel()
+        container = NSPersistentCloudKitContainer(name: "SpendItModel", managedObjectModel: model)
 
         if inMemory {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
@@ -89,6 +91,10 @@ class PersistenceController {
             guard let description = container.persistentStoreDescriptions.first else {
                 fatalError("Failed to retrieve persistent store description")
             }
+
+            // Enable lightweight migration to handle schema changes
+            description.shouldMigrateStoreAutomatically = true
+            description.shouldInferMappingModelAutomatically = true
 
             #if DEBUG
             // In DEBUG mode, disable CloudKit sync (no Apple Developer account needed)
@@ -158,7 +164,7 @@ class PersistenceController {
     func deleteAllData() {
         let context = container.viewContext
 
-        let entities = ["PlanEntity", "PlanItemEntity"]
+        let entities = ["PlanGroupEntity", "PlanItemEntity", "PlanEntity"]
         entities.forEach { entityName in
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
             let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
@@ -257,6 +263,18 @@ extension PersistenceController {
         planUpdatedAt.isOptional = false
         planProperties.append(planUpdatedAt)
 
+        let isGroupParent = NSAttributeDescription()
+        isGroupParent.name = "isGroupParent"
+        isGroupParent.attributeType = .booleanAttributeType
+        isGroupParent.defaultValue = false
+        planProperties.append(isGroupParent)
+
+        let groupType = NSAttributeDescription()
+        groupType.name = "groupType"
+        groupType.attributeType = .stringAttributeType
+        groupType.isOptional = true
+        planProperties.append(groupType)
+
         planEntity.properties = planProperties
 
         // MARK: PlanItem Entity
@@ -334,6 +352,18 @@ extension PersistenceController {
         itemUpdatedAt.isOptional = false
         itemProperties.append(itemUpdatedAt)
 
+        let sourceItemId = NSAttributeDescription()
+        sourceItemId.name = "sourceItemId"
+        sourceItemId.attributeType = .UUIDAttributeType
+        sourceItemId.isOptional = true
+        itemProperties.append(sourceItemId)
+
+        let groupKey = NSAttributeDescription()
+        groupKey.name = "groupKey"
+        groupKey.attributeType = .stringAttributeType
+        groupKey.isOptional = true
+        itemProperties.append(groupKey)
+
         itemEntity.properties = itemProperties
 
         // MARK: Relationships
@@ -358,7 +388,88 @@ extension PersistenceController {
         planEntity.properties.append(planItemsRelationship)
         itemEntity.properties.append(itemPlanRelationship)
 
-        model.entities = [planEntity, itemEntity]
+        // MARK: PlanGroup Entity
+
+        let groupEntity = NSEntityDescription()
+        groupEntity.name = "PlanGroupEntity"
+        groupEntity.managedObjectClassName = NSStringFromClass(PlanGroupEntity.self)
+
+        var groupProperties: [NSAttributeDescription] = []
+
+        let groupId = NSAttributeDescription()
+        groupId.name = "id"
+        groupId.attributeType = .UUIDAttributeType
+        groupId.isOptional = false
+        groupProperties.append(groupId)
+
+        let sequenceOrder = NSAttributeDescription()
+        sequenceOrder.name = "sequenceOrder"
+        sequenceOrder.attributeType = .integer16AttributeType
+        sequenceOrder.defaultValue = 0
+        groupProperties.append(sequenceOrder)
+
+        let groupCreatedAt = NSAttributeDescription()
+        groupCreatedAt.name = "createdAt"
+        groupCreatedAt.attributeType = .dateAttributeType
+        groupCreatedAt.isOptional = false
+        groupProperties.append(groupCreatedAt)
+
+        let groupUpdatedAt = NSAttributeDescription()
+        groupUpdatedAt.name = "updatedAt"
+        groupUpdatedAt.attributeType = .dateAttributeType
+        groupUpdatedAt.isOptional = false
+        groupProperties.append(groupUpdatedAt)
+
+        groupEntity.properties = groupProperties
+
+        // MARK: Group Relationships
+
+        // PlanGroup -> Parent Plan (many-to-one)
+        let groupParentRelationship = NSRelationshipDescription()
+        groupParentRelationship.name = "parentPlan"
+        groupParentRelationship.destinationEntity = planEntity
+        groupParentRelationship.minCount = 1
+        groupParentRelationship.maxCount = 1
+        groupParentRelationship.deleteRule = .cascadeDeleteRule
+
+        // PlanGroup -> Child Plan (many-to-one)
+        let groupChildRelationship = NSRelationshipDescription()
+        groupChildRelationship.name = "childPlan"
+        groupChildRelationship.destinationEntity = planEntity
+        groupChildRelationship.minCount = 1
+        groupChildRelationship.maxCount = 1
+        groupChildRelationship.deleteRule = .cascadeDeleteRule
+
+        // Plan -> Child Groups (one-to-many, inverse of parentPlan)
+        let planChildGroupsRelationship = NSRelationshipDescription()
+        planChildGroupsRelationship.name = "childGroups"
+        planChildGroupsRelationship.destinationEntity = groupEntity
+        planChildGroupsRelationship.minCount = 0
+        planChildGroupsRelationship.maxCount = 0  // to-many
+        planChildGroupsRelationship.deleteRule = .cascadeDeleteRule
+
+        // Plan -> Parent Groups (one-to-many, inverse of childPlan)
+        let planParentGroupsRelationship = NSRelationshipDescription()
+        planParentGroupsRelationship.name = "parentGroups"
+        planParentGroupsRelationship.destinationEntity = groupEntity
+        planParentGroupsRelationship.minCount = 0
+        planParentGroupsRelationship.maxCount = 0  // to-many
+        planParentGroupsRelationship.deleteRule = .cascadeDeleteRule
+
+        // Set inverse relationships
+        groupParentRelationship.inverseRelationship = planChildGroupsRelationship
+        planChildGroupsRelationship.inverseRelationship = groupParentRelationship
+
+        groupChildRelationship.inverseRelationship = planParentGroupsRelationship
+        planParentGroupsRelationship.inverseRelationship = groupChildRelationship
+
+        // Add relationships to entities
+        groupEntity.properties.append(groupParentRelationship)
+        groupEntity.properties.append(groupChildRelationship)
+        planEntity.properties.append(planChildGroupsRelationship)
+        planEntity.properties.append(planParentGroupsRelationship)
+
+        model.entities = [planEntity, itemEntity, groupEntity]
 
         return model
     }

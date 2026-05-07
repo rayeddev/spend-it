@@ -8,6 +8,7 @@
 import SwiftUI
 internal import CoreData
 
+
 // MARK: - Plan Detail View
 
 struct PlanDetailView: View {
@@ -462,6 +463,13 @@ struct PlanItemRowView: View {
 
         do {
             try viewContext.save()
+
+            // Sync to parent if this is a child plan
+            if PlanGroupEntity.isPartOfGroup(plan: plan, in: viewContext) {
+                let syncEngine = GroupSyncEngine(context: viewContext)
+                try? syncEngine.syncChildToParent(childPlan: plan)
+            }
+
             HapticManager.shared.lightImpact()
         } catch {
             print("Error toggling frozen: \(error)")

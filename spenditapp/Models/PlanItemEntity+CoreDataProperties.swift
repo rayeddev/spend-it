@@ -25,6 +25,8 @@ extension PlanItemEntity {
     @NSManaged public var notes: String?
     @NSManaged public var createdAt: Date?
     @NSManaged public var updatedAt: Date?
+    @NSManaged public var sourceItemId: UUID?
+    @NSManaged public var groupKey: String?
     @NSManaged public var plan: PlanEntity?
 }
 

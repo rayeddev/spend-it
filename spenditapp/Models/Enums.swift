@@ -84,3 +84,66 @@ enum RecurrenceType: String, Codable, CaseIterable {
         }
     }
 }
+
+// MARK: - Group Type
+
+/// Defines the type of group planning
+enum GroupType: String, Codable, CaseIterable {
+    case yearly     // 12 monthly child plans
+    case quarterly  // Future: 4 quarterly plans
+    case custom     // Future: user-defined
+
+    var displayName: String {
+        switch self {
+        case .yearly: return "Yearly"
+        case .quarterly: return "Quarterly"
+        case .custom: return "Custom"
+        }
+    }
+
+    /// Number of child plans to create
+    var childPlanCount: Int {
+        switch self {
+        case .yearly: return 12
+        case .quarterly: return 4
+        case .custom: return 1
+        }
+    }
+
+    /// Calculate child plan dates from parent start date
+    func childPlanDates(startingFrom startDate: Date) -> [(start: Date, end: Date)] {
+        let calendar = Calendar.current
+        var dates: [(start: Date, end: Date)] = []
+
+        switch self {
+        case .yearly:
+            // Create 12 monthly periods
+            for month in 0..<12 {
+                guard let monthStart = calendar.date(byAdding: .month, value: month, to: startDate),
+                      let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart),
+                      let adjustedEnd = calendar.date(byAdding: .day, value: -1, to: monthEnd) else {
+                    continue
+                }
+                dates.append((monthStart, adjustedEnd))
+            }
+        case .quarterly:
+            // Create 4 quarterly periods
+            for quarter in 0..<4 {
+                guard let quarterStart = calendar.date(byAdding: .month, value: quarter * 3, to: startDate),
+                      let quarterEnd = calendar.date(byAdding: .month, value: 3, to: quarterStart),
+                      let adjustedEnd = calendar.date(byAdding: .day, value: -1, to: quarterEnd) else {
+                    continue
+                }
+                dates.append((quarterStart, adjustedEnd))
+            }
+        case .custom:
+            // Single period (same as parent)
+            if let endDate = calendar.date(byAdding: .year, value: 1, to: startDate),
+               let adjustedEnd = calendar.date(byAdding: .day, value: -1, to: endDate) {
+                dates.append((startDate, adjustedEnd))
+            }
+        }
+
+        return dates
+    }
+}

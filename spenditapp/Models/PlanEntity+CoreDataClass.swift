@@ -101,6 +101,16 @@ internal import CoreData
         }
     }
 
+    var groupTypeEnum: GroupType? {
+        get {
+            guard let type = groupType else { return nil }
+            return GroupType(rawValue: type)
+        }
+        set {
+            groupType = newValue?.rawValue
+        }
+    }
+
     // MARK: - Convenience
 
     /// Creates a new plan with default values

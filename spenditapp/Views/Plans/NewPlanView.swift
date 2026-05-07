@@ -8,6 +8,7 @@
 import SwiftUI
 internal import CoreData
 
+
 // MARK: - New Plan View
 
 struct NewPlanView: View {

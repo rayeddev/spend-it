@@ -25,7 +25,11 @@ extension PlanEntity {
     @NSManaged public var currencyCode: String?
     @NSManaged public var createdAt: Date?
     @NSManaged public var updatedAt: Date?
+    @NSManaged public var isGroupParent: Bool
+    @NSManaged public var groupType: String?
     @NSManaged public var items: NSSet?
+    @NSManaged public var childGroups: NSSet?
+    @NSManaged public var parentGroups: NSSet?
 }
 
 // MARK: Generated accessors for items
@@ -42,6 +46,38 @@ extension PlanEntity {
 
     @objc(removeItems:)
     @NSManaged public func removeFromItems(_ values: NSSet)
+}
+
+// MARK: Generated accessors for childGroups
+extension PlanEntity {
+
+    @objc(addChildGroupsObject:)
+    @NSManaged public func addToChildGroups(_ value: PlanGroupEntity)
+
+    @objc(removeChildGroupsObject:)
+    @NSManaged public func removeFromChildGroups(_ value: PlanGroupEntity)
+
+    @objc(addChildGroups:)
+    @NSManaged public func addToChildGroups(_ values: NSSet)
+
+    @objc(removeChildGroups:)
+    @NSManaged public func removeFromChildGroups(_ values: NSSet)
+}
+
+// MARK: Generated accessors for parentGroups
+extension PlanEntity {
+
+    @objc(addParentGroupsObject:)
+    @NSManaged public func addToParentGroups(_ value: PlanGroupEntity)
+
+    @objc(removeParentGroupsObject:)
+    @NSManaged public func removeFromParentGroups(_ value: PlanGroupEntity)
+
+    @objc(addParentGroups:)
+    @NSManaged public func addToParentGroups(_ values: NSSet)
+
+    @objc(removeParentGroups:)
+    @NSManaged public func removeFromParentGroups(_ values: NSSet)
 }
 
 extension PlanEntity: Identifiable {}

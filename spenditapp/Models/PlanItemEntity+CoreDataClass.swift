@@ -34,6 +34,21 @@ internal import CoreData
         }
     }
 
+    // MARK: - Group Key Helper
+
+    /// Computed group key for matching items across plans
+    /// Format: "itemname|type"
+    var computedGroupKey: String {
+        let itemName = name?.lowercased().trimmingCharacters(in: .whitespaces) ?? ""
+        let itemType = type ?? ""
+        return "\(itemName)|\(itemType)"
+    }
+
+    /// Update the stored groupKey to match computed value
+    func updateGroupKey() {
+        groupKey = computedGroupKey
+    }
+
     // MARK: - Convenience
 
     /// Creates a new plan item with default values
@@ -61,6 +76,9 @@ internal import CoreData
             item.sortOrder = Int16((existingItems.map { $0.sortOrder }.max() ?? -1) + 1)
         }
 
+        // Set group key for aggregation
+        item.updateGroupKey()
+
         return item
     }
 
@@ -79,6 +97,27 @@ internal import CoreData
         newItem.notes = self.notes
         newItem.createdAt = Date()
         newItem.updatedAt = Date()
+        newItem.updateGroupKey()  // Set group key for aggregation
+        return newItem
+    }
+
+    /// Clone this item for group plan child with source tracking
+    func cloneForGroup(to plan: PlanEntity, dividedAmount: Decimal, in context: NSManagedObjectContext) -> PlanItemEntity {
+        let newItem = PlanItemEntity(context: context)
+        newItem.id = UUID()
+        newItem.plan = plan
+        newItem.name = self.name
+        newItem.amountDecimal = dividedAmount  // Use divided amount
+        newItem.type = self.type
+        newItem.isFrozen = false
+        newItem.sortOrder = self.sortOrder
+        newItem.icon = self.icon
+        newItem.color = self.color
+        newItem.notes = self.notes
+        newItem.sourceItemId = self.id  // Track source for group sync
+        newItem.createdAt = Date()
+        newItem.updatedAt = Date()
+        newItem.updateGroupKey()
         return newItem
     }
 

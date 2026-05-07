@@ -8,6 +8,7 @@
 import SwiftUI
 internal import CoreData
 
+
 // MARK: - Plans List View
 
 struct PlansListView: View {
@@ -25,6 +26,7 @@ struct PlansListView: View {
     private var plans: FetchedResults<PlanEntity>
 
     @State private var showingNewPlanSheet = false
+    @State private var showingNewGroupPlanSheet = false
     @State private var showingSettings = false
     @State private var selectedPlan: PlanEntity?
 
@@ -71,16 +73,29 @@ struct PlansListView: View {
                 }
 
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingNewPlanSheet = true
+                    Menu {
+                        Button {
+                            showingNewPlanSheet = true
+                        } label: {
+                            Label("New Plan", systemImage: "calendar")
+                        }
+
+                        Button {
+                            showingNewGroupPlanSheet = true
+                        } label: {
+                            Label("New Group Plan", systemImage: "calendar.badge.plus")
+                        }
                     } label: {
-                        Image(systemName: "plus")
+                        Image(systemName: "plus.circle.fill")
                             .accessibilityLabel("Create new plan")
                     }
                 }
             }
             .sheet(isPresented: $showingNewPlanSheet) {
                 NewPlanView()
+            }
+            .sheet(isPresented: $showingNewGroupPlanSheet) {
+                CreateGroupPlanView()
             }
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
@@ -168,7 +183,11 @@ struct PlansListView: View {
         .scrollContentBackground(.hidden)
         .listStyle(.plain)
         .navigationDestination(for: PlanEntity.self) { plan in
-            PlanDetailView(plan: plan)
+            if plan.isGroupParent {
+                ParentPlanDetailView(parentPlan: plan)
+            } else {
+                PlanDetailView(plan: plan)
+            }
         }
     }
 
@@ -207,7 +226,19 @@ struct PlanRowView: View {
 
                 Spacer()
 
-                if plan.isRecurring {
+                if plan.isGroupParent {
+                    HStack(spacing: 4) {
+                        Image(systemName: "calendar.badge.plus")
+                            .font(.caption)
+                        Text("Group Plan")
+                            .font(.caption.weight(.medium))
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Color.purple.opacity(0.1))
+                    .foregroundStyle(.purple)
+                    .clipShape(Capsule())
+                } else if plan.isRecurring {
                     HStack(spacing: 4) {
                         Image(systemName: "repeat")
                             .font(.caption)
