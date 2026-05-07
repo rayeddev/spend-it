@@ -74,8 +74,9 @@ All sizes scale with **Dynamic Type**. Use semantic `.font(.headline)` etc. wher
 
 ## 5. Radii & elevation
 
-- **Pill / chip:** fully rounded (`Capsule()`). Used for badges (Recurring, Group Plan, Ends in N days).
-- **Card:** 16pt corner radius. Modern budgeting apps lean softer than HIG's default 10pt.
+- **Pill / chip:** fully rounded (`Capsule()`). Used for badges (Recurring, Ends in N days).
+- **Card:** 20pt corner radius via `.planCard()` modifier. Modern budgeting apps lean softer than HIG's default 10pt.
+- **Item card:** 12pt via `.itemCard()` modifier (smaller surfaces, list items).
 - **Sheet / modal:** system default (top-rounded).
 - **Button:** 12pt corner radius. CTA buttons 14pt.
 - **Calculator key:** 12pt.
@@ -85,22 +86,23 @@ All sizes scale with **Dynamic Type**. Use semantic `.font(.headline)` etc. wher
 - Floating elements (FAB, snackbar): `shadow(color: .black.opacity(0.08), radius: 12, y: 4)`.
 - Dark mode: replace shadows with a hairline `divider` stroke at 0.5pt — shadows disappear on dark surfaces.
 
-**Materials:** prefer `.regularMaterial` for sheet backgrounds when content scrolls beneath. Use `.ultraThinMaterial` for the summary bar to give the "floating glass" feel iOS 17+ apps now expect.
+**Materials:** prefer `.regularMaterial` for sheet backgrounds when content scrolls beneath. The summary bar uses the project's `.glassMorphism(tint:intensity:)` modifier — it composes `.ultraThinMaterial` + a tint overlay + a hairline gradient stroke for the "floating glass" feel iOS 17+ apps now expect. Don't reinvent it inline.
 
 ## 6. Components
 
 ### Plan card (home list row)
-- 16pt radius, `surfaceElevated` background, 16pt internal padding.
+- `.planCard()` modifier (20pt radius, medium elevation, 16pt internal padding).
 - Header: title (left) + status badge (right).
 - Middle: date range (left, secondary) + remaining amount (right, color-coded).
 - Footer: 3-column mini-summary (Income / Expenses / Savings), gradient text.
 - Tap: full card. Long-press: context menu (Clone, Archive, Delete).
 
 ### Summary bar (plan detail, fixed bottom)
-- 100pt tall. `.ultraThinMaterial` background. 16pt corner radius on top corners.
-- Hero: Remaining amount, 36pt rounded bold, gradient (matches sign).
-- Below: 3 chips (Income / Outcome / Savings) with mini-amounts.
-- Updates animate in <100ms with count-up (see §7).
+- `.glassMorphism(tint: .blue, intensity: 0.8)` background, 20pt continuous radius.
+- 3 columns (Income / Expenses / Savings) with rounded-bold mini-amounts.
+- Hero: Remaining amount, 32pt rounded bold, gradient that matches sign (red / orange / green).
+- "Convert to Savings" CTA appears when remaining > 0.
+- All numeric values use `.contentTransition(.numericText())` + 250ms easeInOut on value changes (see §7).
 
 ### Calculator
 - Modal sheet, slides up. 300ms ease-out.
@@ -210,7 +212,7 @@ We follow HIG strictly except where modern budgeting apps have moved past it. Do
 
 | Topic | HIG default | Our choice | Why |
 |---|---|---|---|
-| Card corner radius | 10pt | 16pt | Softer, more "physical card" feel matches category leaders |
+| Card corner radius | 10pt | 20pt (cards) / 12pt (item rows) | Softer, more "physical card" feel matches category leaders |
 | Summary bar | toolbar/tab | floating glass material | Continuous visibility of remaining balance is the app's core promise |
 | Empty state CTA | text button | filled prominent button | Single most important action on first run |
 | Number changes | snap | count-up | Reinforces "live" recalculation, the differentiator |

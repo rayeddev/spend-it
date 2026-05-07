@@ -300,6 +300,8 @@ struct SummaryMiniItem: View {
             Text(CurrencyFormatter.shared.abbreviatedString(from: value, currencyCode: currencyCode))
                 .font(.caption.weight(.bold))
                 .foregroundStyle(gradient)
+                .contentTransition(.numericText())
+                .animation(.easeInOut(duration: 0.25), value: value)
         }
     }
 }
