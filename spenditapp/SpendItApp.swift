@@ -17,6 +17,8 @@ struct SpendItApp: App {
 
     let persistenceController = PersistenceController.shared
 
+    @AppStorage("hasOnboarded") private var hasOnboarded = false
+
     // MARK: - Initialization
 
     init() {
@@ -27,8 +29,14 @@ struct SpendItApp: App {
 
     var body: some Scene {
         WindowGroup {
-            PlansListView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+            Group {
+                if hasOnboarded {
+                    PlansListView()
+                        .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                } else {
+                    OnboardingView()
+                }
+            }
         }
     }
 
