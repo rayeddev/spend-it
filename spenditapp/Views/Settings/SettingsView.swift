@@ -13,8 +13,6 @@ struct SettingsView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    // TODO: Add state for sync status, subscription status, etc.
-
     var body: some View {
         NavigationStack {
             Form {
@@ -58,35 +56,6 @@ struct SettingsView: View {
                     #else
                     Text("Your data is securely synced to your private iCloud account")
                     #endif
-                }
-
-                Section {
-                    // TODO: Implement subscription management
-                    NavigationLink {
-                        Text("Subscription details coming soon")
-                            .foregroundStyle(.secondary)
-                    } label: {
-                        HStack {
-                            Image(systemName: "star.circle.fill")
-                                .foregroundStyle(.yellow)
-                            Text("Subscription")
-                        }
-                    }
-
-                    // TODO: Implement export functionality (P2 feature)
-                    Button {
-                        // Export functionality
-                    } label: {
-                        HStack {
-                            Image(systemName: "square.and.arrow.up")
-                                .foregroundStyle(.green)
-                            Text("Export to Excel")
-                            Spacer()
-                            Text("$6.99")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .disabled(true)
                 }
 
                 Section {
