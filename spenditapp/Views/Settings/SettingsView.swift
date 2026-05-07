@@ -101,7 +101,7 @@ struct SettingsView: View {
                         }
                     }
 
-                    Link(destination: URL(string: "https://www.apple.com/legal/privacy")!) {
+                    Link(destination: URL(string: "https://rayeddev.github.io/spend-it/privacy/")!) {
                         HStack {
                             Image(systemName: "hand.raised")
                             Text("Privacy Policy")
@@ -112,7 +112,7 @@ struct SettingsView: View {
                         }
                     }
 
-                    Link(destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula")!) {
+                    Link(destination: URL(string: "https://rayeddev.github.io/spend-it/terms/")!) {
                         HStack {
                             Image(systemName: "doc.text")
                             Text("Terms of Service")

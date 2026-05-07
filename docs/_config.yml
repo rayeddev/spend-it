@@ -1,0 +1,13 @@
+title: SpendIt
+description: Plan your spending before it happens, not after.
+theme: minima
+url: https://rayeddev.github.io
+baseurl: /spend-it
+permalink: pretty
+
+show_excerpts: false
+
+header_pages: []
+
+exclude:
+  - README.md
