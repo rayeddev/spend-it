@@ -10,6 +10,7 @@ Operating manual for AI agents working on this repo.
 3. [`context-docs/system-flow.md`](context-docs/system-flow.md) — architecture in one screen.
 4. [`context-docs/conventions.md`](context-docs/conventions.md) — code, git rules.
 5. [`context-docs/design-conv.md`](context-docs/design-conv.md) — UI/UX design system (read before any view change).
+6. [`context-docs/appstore.md`](context-docs/appstore.md) — App Store submission kit (copy, screenshots, checklist).
 
 If a fact lives in code or `git log`, do **not** duplicate it here.
 
